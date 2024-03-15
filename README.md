@@ -63,15 +63,6 @@ docker build . --build-arg UID=3000 --build-arg GID=3000 -f Dockerfile -t parser
 ```
 4. Создайте и запустите контейнер:<br>
 ```bash
-docker run --rm --name -v parser parser
+docker run --rm --name -v /opt/docker_containers/parser/result/:/app/result/ parser parser
 ```
 <br>
-
-
--v prod-static:/home/appuser/web/staticfiles \
--v prod-media:/home/appuser/web/mediafiles \
--v /dir/nginx.conf:/etc/nginx/nginx.conf \
--v /dir/default.conf:/etc/nginx/conf.d/default.conf \
--v /dir/my.crt:/etc/pki/tls/certs/my.crt \
--v /dir/my.key:/etc/pki/tls/private/my.key \
--v /dir/dhparam.pem:/etc/ssl/certs/dhparam.pem \
