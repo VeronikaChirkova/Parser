@@ -1,3 +1,5 @@
+import json
+import logging
 import time
 from urllib.parse import urlparse
 
@@ -16,10 +18,9 @@ class Parser:
 
     def __init__(self):
         options = Options()
-        options.add_argument("--headless=new")
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
         self.driver = webdriver.Chrome(options=options)
-
-
 
     def get_domain(self, url: str) -> str:
         """
@@ -36,7 +37,6 @@ class Parser:
         domain = parsed_url.netloc
         return domain
 
-
     def get_freepic(self, url: str) -> dict:
         """Получает ссылки на картинки кошек и текст описания к ним
 
@@ -48,7 +48,7 @@ class Parser:
         """
         headers = Headers(os="win", headers=True).generate()
         resp = requests.get(url=url, headers=headers)
-        soup = bs(resp.content)
+        soup = bs(resp.content, features="lxml")
         card_els = soup.select(selector="div a img[src]")
 
         cards = []
@@ -62,7 +62,6 @@ class Parser:
         result = {}
         result[self.get_domain(url=url)] = cards  # {"url": [{}, {}]}
         return result
-
 
     def get_cian(self, url: str) -> dict[list[str], str]:
         """Получает ссылки на картинки квартир и текст описания к ним
@@ -91,7 +90,6 @@ class Parser:
         result = {}
         result[self.get_domain(url=url)] = cards
         return result
-
 
     def get_tez(self, url: str) -> dict:
         """Получает ссылки на картинки отелей и текст описания к ним
@@ -135,7 +133,6 @@ class Parser:
 
         return result
 
-
     def get_wb(self, url: str) -> dict[str, str]:
         """Получает ссылки на картинки женских футболок и текст описания к ним
 
@@ -149,7 +146,9 @@ class Parser:
         try:
             self.driver.get(url)
             element = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "article div>img[src]"))
+                EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, "article div>img[src]")
+                )
             )
         except TimeoutException:
             # self.driver.quit()
@@ -170,7 +169,6 @@ class Parser:
         result[self.get_domain(url=url)] = cards
 
         return result
-
 
     def get_avidread(self, url: str) -> dict[str, str]:
         """Получает ссылки на картинки книг и текст описания к ним
@@ -204,7 +202,6 @@ class Parser:
 
         return result
 
-
     def get_kino(self, url: str) -> dict[str, str]:
         """Получает ссылки на картинки фильмов и текст описания к ним
 
@@ -237,7 +234,6 @@ class Parser:
             pass
 
         return result
-
 
     def get_rose(self, url: str) -> dict[str, str]:
         """Получает ссылки на картинки букетов и текст описания к ним
@@ -286,7 +282,6 @@ class Parser:
 
         return result
 
-
     def get_toys(self, url: str) -> dict[str, str]:
         """Получает ссылки на картинки настольных игр и текст описания к ним
 
@@ -330,7 +325,6 @@ class Parser:
 
         return result
 
-
     def get_wine(self, url: str) -> dict[str, str]:
         """Получает ссылки на картинки вин и их названия
 
@@ -370,7 +364,6 @@ class Parser:
             pass
 
         return result
-
 
     def get_sensorik(self, url: str) -> dict[str, str]:
         """Получает ссылки на картинки развивающих игр для детей и их названия
@@ -448,4 +441,6 @@ if __name__ == "__main__":
     info.update(toys_info)
     info.update(wine_info)
     info.update(sensorik_info)
-    print()
+    logging.info(info)
+    with open("./result/info_file.txt", "w") as file:
+        json.dump(obj=info, fp=file, ensure_ascii=False, indent=4)

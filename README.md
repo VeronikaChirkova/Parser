@@ -27,3 +27,51 @@ pip install -r requirements.txt
     https://ghtoys.ru - настольные игры
     https://nsk.winestyle.ru - вина
     https://sensorikagame.ru - развивающие игры для детей
+```
+
+## Запуск в докере
+1. Создайте нового пользователя `appuser` без домашней директории и добавьте его в группу `appuser` на локальном ПК.<br>
+
+```bash
+useradd -M appuser -u 3000 -g 3000 && sudo usermod -L appuser &&sudo usermod -aG appuser appuser
+```
+Это необходимо для обеспечения безопасности, чтобы запуск процессов внутри контейнера осуществлялся от пользователя, который не имеет никаких прав на хостовой машине.<br>
+
+UID (GID) пользователя в контейнере и пользователя за пределами контейнера, у которого есть соответствующие права на доступ к файлу, должны соответствовать.<br>
+
+2. В Dockerfile необходимо прописать: UID (GID), создание пользователя и передачу ему прав, смену пользователя.<br>
+```text
+ARG UNAME=appuser
+ARG UID
+ARG GID
+
+# create user
+RUN groupadd -g ${GID} ${UNAME} &&\
+useradd ${UNAME} -u ${UID} -g ${GID} &&\
+usermod -L ${UNAME} &&\
+usermod -aG ${UNAME} ${UNAME}
+
+# chown all the files to the app user
+RUN chown -R ${UNAME}:${UNAME} /app
+
+USER ${UNAME}
+```
+3. Команда для создания образа (обязательно указать UID (GID)):<br>
+
+```bash
+docker build . --build-arg UID=3000 --build-arg GID=3000 -f Dockerfile -t parser
+```
+4. Создайте и запустите контейнер:<br>
+```bash
+docker run --rm --name -v parser parser
+```
+<br>
+
+
+-v prod-static:/home/appuser/web/staticfiles \
+-v prod-media:/home/appuser/web/mediafiles \
+-v /dir/nginx.conf:/etc/nginx/nginx.conf \
+-v /dir/default.conf:/etc/nginx/conf.d/default.conf \
+-v /dir/my.crt:/etc/pki/tls/certs/my.crt \
+-v /dir/my.key:/etc/pki/tls/private/my.key \
+-v /dir/dhparam.pem:/etc/ssl/certs/dhparam.pem \
